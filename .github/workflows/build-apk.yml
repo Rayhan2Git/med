@@ -1,0 +1,68 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'bd-medicine-app/mobile/package-lock.json'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: bd-medicine-app/mobile
+
+      - name: Run Expo prebuild
+        run: npx expo prebuild --platform android --clean
+        working-directory: bd-medicine-app/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Android APK (Debug)
+        run: |
+          cd android
+          ./gradlew assembleDebug
+        working-directory: bd-medicine-app/mobile
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: bd-medicine-app/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Build Android APK (Release)
+        if: github.event_name == 'push'
+        run: |
+          cd android
+          ./gradlew assembleRelease
+        working-directory: bd-medicine-app/mobile
+
+      - name: Upload Release APK
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-release
+          path: bd-medicine-app/mobile/android/app/build/outputs/apk/release/app-release.apk
