@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ঔষধ দাম · Medicine Price BD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF7F0;
+    --ink:#1C1C1A;
+    --ink-soft:#5B5B54;
+    --green:#0B6E4F;
+    --green-deep:#084E38;
+    --red:#C6303E;
+    --card:#F1EEE3;
+    --line:#DEDACB;
+    --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px 80px;}
+
+  header.hero{
+    background:var(--green);
+    background-image:linear-gradient(160deg,var(--green) 0%,var(--green-deep) 100%);
+    color:var(--paper);
+    padding:52px 20px 40px;
+    border-bottom:6px solid var(--red);
+  }
+  header.hero .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    opacity:.75;
+    margin-bottom:10px;
+  }
+  header.hero h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(28px,6vw,40px);
+    margin:0 0 8px;
+    line-height:1.1;
+  }
+  header.hero p{
+    margin:0 0 26px;
+    opacity:.85;
+    font-size:15px;
+    max-width:44ch;
+  }
+
+  .search-box{
+    max-width:720px;
+    margin:0 auto;
+    display:flex;
+    gap:10px;
+    background:var(--white);
+    padding:6px;
+    border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,.18);
+  }
+  .search-box input{
+    flex:1;
+    border:none;
+    outline:none;
+    font-size:16px;
+    padding:12px 14px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:transparent;
+  }
+  .search-box button{
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    border-radius:6px;
+    padding:0 20px;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .search-box button:active{transform:translateY(1px);}
+
+  main{padding-top:26px;}
+  .stat-line{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin:18px 0 14px;
+    letter-spacing:.02em;
+  }
+
+  .result-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 18px;
+    margin-bottom:10px;
+    cursor:pointer;
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  .result-card:hover{border-color:var(--green);}
+  .result-card:active{transform:scale(.995);}
+  .result-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;}
+  .result-name{font-family:'Fraunces',serif;font-weight:600;font-size:18px;}
+  .result-price{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:17px;color:var(--green-deep);white-space:nowrap;}
+  .result-meta{font-size:13px;color:var(--ink-soft);margin-top:4px;}
+  .result-generic{font-size:12px;color:var(--ink-soft);margin-top:6px;font-style:italic;}
+
+  .empty, .loading, .error{
+    text-align:center;
+    color:var(--ink-soft);
+    padding:50px 20px;
+    font-size:14px;
+  }
+  .error{color:var(--red);}
+
+  /* Detail overlay */
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,18,14,.5);
+    display:none;align-items:flex-end;justify-content:center;z-index:50;
+  }
+  .overlay.open{display:flex;}
+  .sheet{
+    background:var(--paper);
+    width:100%;max-width:720px;
+    max-height:88vh;overflow-y:auto;
+    border-radius:16px 16px 0 0;
+    padding:24px 22px 40px;
+    animation:up .18s ease-out;
+  }
+  @keyframes up{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .sheet-close{
+    display:block;margin-left:auto;background:none;border:none;
+    font-size:22px;color:var(--ink-soft);cursor:pointer;line-height:1;
+  }
+  .sheet h2{font-family:'Fraunces',serif;font-size:24px;margin:6px 0 2px;}
+  .sheet .sub{color:var(--ink-soft);font-size:14px;margin-bottom:18px;}
+  .price-hero{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;font-size:30px;color:var(--green-deep);
+    margin-bottom:2px;
+  }
+  .price-hero span{font-size:14px;color:var(--ink-soft);font-weight:500;}
+
+  .section-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-soft);margin:26px 0 10px;
+  }
+  .alt-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 0;border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .alt-row:last-child{border-bottom:none;}
+  .alt-row.cheapest{
+    background:linear-gradient(90deg, rgba(11,110,79,.08), transparent);
+    margin:0 -12px;padding:12px;border-radius:8px;border-bottom:none;
+  }
+  .alt-name{font-weight:600;}
+  .alt-meta{color:var(--ink-soft);font-size:12px;}
+  .alt-price{font-family:'JetBrains Mono',monospace;font-weight:700;}
+  .badge{
+    display:inline-block;background:var(--green);color:var(--paper);
+    font-size:10px;padding:2px 8px;border-radius:20px;margin-left:8px;
+    letter-spacing:.04em;vertical-align:middle;
+  }
+  .save-note{
+    font-size:13px;color:var(--green-deep);margin-top:16px;font-weight:600;
+  }
+  footer{
+    text-align:center;font-size:12px;color:var(--ink-soft);
+    padding:30px 20px;font-family:'JetBrains Mono',monospace;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap" style="padding:0;">
+    <div class="eyebrow">Bangladesh · Medicine Price Lookup</div>
+    <h1>ঔষধের দাম খুঁজুন<br>Find the cheapest brand</h1>
+    <p>Search any medicine and instantly compare prices across every brand of the same generic.</p>
+  </div>
+  <div class="search-box">
+    <input id="q" type="text" placeholder="Try “napa”, “omeprazole”, “amoxicillin”…" autocomplete="off">
+    <button onclick="doSearch()">Search</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <main id="results">
+    <div class="empty">Search above to see prices and cheaper alternatives.</div>
+  </main>
+</div>
+
+<footer>MedTestBD-style price lookup · data scraped from public listings</footer>
+
+<div class="overlay" id="overlay">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+// ⚠️ Replace this with your deployed Render backend URL after deploying, e.g.
+// const API_BASE = "https://bd-medicine-api.onrender.com";
+const API_BASE = "http://localhost:8000";
+
+const resultsEl = document.getElementById('results');
+const qEl = document.getElementById('q');
+const overlay = document.getElementById('overlay');
+const sheet = document.getElementById('sheet');
+
+qEl.addEventListener('keydown', e => { if(e.key === 'Enter') doSearch(); });
+
+async function doSearch(){
+  const q = qEl.value.trim();
+  if(!q){ return; }
+  resultsEl.innerHTML = '<div class="loading">Searching…</div>';
+  try{
+    const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(q)}&limit=25`);
+    if(!res.ok) throw new Error('bad response');
+    const data = await res.json();
+    renderResults(data.results, q);
+  }catch(err){
+    resultsEl.innerHTML = `<div class="error">Couldn't reach the server. Check API_BASE in the code, and that the backend is running.</div>`;
+  }
+}
+
+function renderResults(results, q){
+  if(!results || results.length === 0){
+    resultsEl.innerHTML = `<div class="empty">No matches for “${escapeHtml(q)}”. Try a shorter or more generic name.</div>`;
+    return;
+  }
+  resultsEl.innerHTML = `<div class="stat-line">${results.length} result${results.length>1?'s':''} for “${escapeHtml(q)}”</div>` +
+    results.map(r => `
+      <div class="result-card" onclick="openDetail(${r.id})">
+        <div class="result-top">
+          <div class="result-name">${escapeHtml(r.name)}${r.strength ? ' <span style="font-weight:400;color:var(--ink-soft);font-size:14px;">'+escapeHtml(r.strength)+'</span>' : ''}</div>
+          <div class="result-price">${r.unit_price != null ? '৳'+r.unit_price : '—'}</div>
+        </div>
+        <div class="result-meta">${escapeHtml(r.dosage_form || '')} · ${escapeHtml(r.manufacturer || 'Unknown manufacturer')}</div>
+        ${r.generic_name ? `<div class="result-generic">${escapeHtml(r.generic_name)}</div>` : ''}
+      </div>
+    `).join('');
+}
+
+async function openDetail(id){
+  sheet.innerHTML = '<div class="loading">Loading…</div>';
+  overlay.classList.add('open');
+  try{
+    const res = await fetch(`${API_BASE}/api/medicine/${id}`);
+    const brand = await res.json();
+    renderDetail(brand);
+  }catch(err){
+    sheet.innerHTML = '<button class="sheet-close" onclick="closeDetail()">×</button><div class="error">Failed to load details.</div>';
+  }
+}
+
+function renderDetail(b){
+  const alts = (b.alternatives || []).slice().sort((a,c) => (a.unit_price ?? Infinity) - (c.unit_price ?? Infinity));
+  const cheapest = alts[0];
+  const currentPrice = b.unit_price;
+  let saveNote = '';
+  if(cheapest && currentPrice != null && cheapest.unit_price < currentPrice){
+    const diff = (currentPrice - cheapest.unit_price).toFixed(2);
+    const pct = Math.round((1 - cheapest.unit_price/currentPrice) * 100);
+    saveNote = `<div class="save-note">Switching to ${escapeHtml(cheapest.name)} saves ৳${diff} per unit (${pct}% cheaper).</div>`;
+  }
+
+  sheet.innerHTML = `
+    <button class="sheet-close" onclick="closeDetail()">×</button>
+    <h2>${escapeHtml(b.name)}</h2>
+    <div class="sub">${escapeHtml(b.strength || '')} ${b.dosage_form ? '· '+escapeHtml(b.dosage_form) : ''} · ${escapeHtml(b.manufacturer || '')}</div>
+    <div class="price-hero">${b.unit_price != null ? '৳'+b.unit_price : '—'} <span>per unit</span></div>
+    ${b.generic_name ? `<div class="sub">Generic: ${escapeHtml(b.generic_name)}</div>` : ''}
+    ${saveNote}
+    ${alts.length ? `
+      <div class="section-label">Other brands, same generic (${alts.length})</div>
+      ${alts.map((a,i) => `
+        <div class="alt-row ${i===0 ? 'cheapest' : ''}">
+          <div>
+            <div class="alt-name">${escapeHtml(a.name)} ${i===0 ? '<span class="badge">CHEAPEST</span>' : ''}</div>
+            <div class="alt-meta">${escapeHtml(a.strength || '')} · ${escapeHtml(a.manufacturer || '')}</div>
+          </div>
+          <div class="alt-price">${a.unit_price != null ? '৳'+a.unit_price : '—'}</div>
+        </div>
+      `).join('')}
+    ` : '<div class="section-label">No other brands found for this generic</div>'}
+  `;
+}
+
+function closeDetail(){ overlay.classList.remove('open'); }
+overlay.addEventListener('click', e => { if(e.target === overlay) closeDetail(); });
+
+function escapeHtml(s){
+  if(s == null) return '';
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+</script>
+
+</body>
+</html>
